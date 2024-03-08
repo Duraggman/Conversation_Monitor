@@ -1,13 +1,13 @@
 plugins {
-    alias(libs.plugins.androidApplication)
+    id("com.android.application")
 }
 
 android {
-    namespace = "com.example.convo_monitor"
+    namespace = "com.example.conversation_monitor"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.convo_monitor"
+        applicationId = "com.example.conversation_monitor"
         minSdk = 34
         targetSdk = 34
         versionCode = 1
@@ -19,10 +19,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -33,11 +30,15 @@ android {
 
 dependencies {
 
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(libs.activity)
-    implementation(libs.constraintlayout)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    // Adding the Mozilla Speech Library
+    implementation("com.github.mozilla:mozillaspeechlibrary:2.0.0")
+    implementation("commons-io:commons-io:2.15.1") // Just in case you want to use the utils for downloading/unzipping
+
 }
