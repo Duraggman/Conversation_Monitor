@@ -1,0 +1,7 @@
+{
+    "avdmanager.executable": "d:\\ProgLang\\Android\\tools\\bin\\avdmanager.bat",
+    "avdmanager.sdkManager": "d:\\ProgLang\\Android\\tools\\bin\\sdkmanager.bat",
+    "avdmanager.emulator": "D:\\ProgLang\\Android\\tools\\emulator.exe",
+    "avdmanager.cmdVersion": "",
+    "avdmanager.sdkPath": "D:\\ProgLang\\Android"
+}
