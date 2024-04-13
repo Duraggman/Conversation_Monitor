@@ -37,8 +37,6 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-    // Adding the Mozilla Speech Library
-    implementation("com.github.mozilla:mozillaspeechlibrary:2.0.0")
-    implementation("commons-io:commons-io:2.15.1") // Just in case you want to use the utils for downloading/unzipping
-
+    //PicoVoice
+    implementation("ai.picovoice:picovoice-android:3.0")
 }
