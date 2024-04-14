@@ -41,8 +41,6 @@ public class MainActivity extends AppCompatActivity {
         recordButton = findViewById(R.id.rBtn);
         // Get the EditText for displaying the transcription
         rText = findViewById(R.id.rText);
-        // Get the ProgressBar for displaying the microphone activity
-        progBar = findViewById(R.id.progBar);
 
         // Request RECORD_AUDIO permission
         final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
