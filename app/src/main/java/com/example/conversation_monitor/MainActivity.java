@@ -1,186 +1,162 @@
 package com.example.conversation_monitor;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
+import android.widget.CheckBox;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import com.mozilla.speechlibrary.SpeechResultCallback;
 import com.mozilla.speechlibrary.SpeechService;
 import com.mozilla.speechlibrary.SpeechServiceSettings;
 import com.mozilla.speechlibrary.stt.STTResult;
+import com.mozilla.speechlibrary.utils.ModelUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 
-// TODO: Implement a check to verify if the model is ready before starting the SpeechService, do this by checking that the model file has been loaded properly
-
+// TODO: Fix insufficient storage error.
 public class MainActivity extends AppCompatActivity {
+    // Declare the SpeechService to manage voice recognition.
+    private SpeechService mSpeechService;
+    // Declare the SpeechResultCallback to handle voice recognition events.
+    private SpeechResultCallback mVoiceSearchListener;
+    // Declare the UI elements for the app.
+    private TextView transcriptionTextView;
+    private Button recordButton;
+    private String language = "en-US";
+    private CheckBox modelCheckBox;
 
-    Button recordButton;
-
-    TextView rText;
-
-    StringBuilder transcriptionBuilder;
-
-    ProgressBar progBar;
+    String modelPath = ModelUtils.modelPath(this, language);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set the content view to your layout defined in XML.
         setContentView(R.layout.activity_main);
 
-        // Get the record button from the layout
-        recordButton = findViewById(R.id.rBtn);
-        // Get the EditText for displaying the transcription
-        rText = findViewById(R.id.rText);
+        // Initialize the UI elements.
+        transcriptionTextView = findViewById(R.id.rText);
+        recordButton = findViewById(R.id.RecBtn);
 
-        // Request RECORD_AUDIO permission
-        final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
+        // Initialize the speech recognition service.
+        initializeSpeechService();
+
+        if (ModelUtils.isReady(modelPath)) {
+            modelCheckBox.setChecked(true);
         }
 
-        // Get the AssetManager instance
-        AssetManager assetManager = getAssets();
+        recordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mSpeechService != null) {
 
-        // List all files in the assets directory to verify the model file exists
-        try {
-            String[] files = assetManager.list("");  // Lists everything in the assets folder
-            for (String file : files) {
-                Log.d("AssetFiles", file);
+                    try {
+                        SpeechServiceSettings settings = new SpeechServiceSettings.Builder()
+                                .withLanguage(language)
+                                .withModelPath(copyAssetToFile("deepspeech-0.9.3-models.pbmm"))
+                                .build();
+                        mSpeechService.start(settings, mVoiceSearchListener);
+                    } catch (IOException e) {
+                        Log.e("MainActivity", "Error setting up speech service", e);
+                    }
+                }
             }
-        } catch (IOException e) {
-            Log.e("AssetFiles", "Error listing assets", e);
-        }
 
-        // Initialize the SpeechService
-        SpeechService mSpeechService = new SpeechService(this);
-        // Create a StringBuilder for the transcription
-        transcriptionBuilder = new StringBuilder();
+        });
+    }
 
+    private void initializeSpeechService() {
+        // Create an instance of SpeechResultCallback to handle various speech events.
+        mVoiceSearchListener = new SpeechResultCallback() {
+            @Override
+            public void onStartListen() {
+                // This is called when the speech service has successfully started listening.
+                Log.i("Speech", "Started listening");
+            }
 
-        // button setup
+            @Override
+            public void onMicActivity(double fftsum) {
+                // This method reports microphone activity, useful for visual feedback in UI.
+                Log.i("Speech", "Microphone activity detected: " + fftsum);
+            }
+
+            @Override
+            public void onDecoding() {
+                // This is triggered when the speech decoding process begins.
+                Log.i("Speech", "Decoding speech");
+            }
+
+            @Override
+            public void onSTTResult(@Nullable STTResult result) {
+                // This is triggered when the speech-to-text processing is complete.
+                if (result != null) {
+                    runOnUiThread(() -> transcriptionTextView.setText(String.format("Transcription: %s", result.mTranscription)));
+                }
+            }
+
+            @Override
+            public void onNoVoice() {
+                // This is called if no voice is detected.
+                Log.i("Speech", "No voice detected");
+            }
+
+            @Override
+            public void onError(@SpeechResultCallback.ErrorType int errorType, @Nullable String error) {
+                // Handle any errors during the speech recognition process.
+                Log.e("Speech", "Error occurred: " + error);
+            }
+        };
+
+        // Set up and start the speech service with configuration settings.
+        setupSpeechService();
+    }
+
+    private void setupSpeechService() {
         try {
-            // Copy the model file from assets to the internal storage
             String modelPath = copyAssetToFile("deepspeech-0.9.3-models.pbmm");
-
-            // Configure settings for the speech service
+            mSpeechService = new SpeechService(this);
             SpeechServiceSettings settings = new SpeechServiceSettings.Builder()
-                    .withLanguage("en-UK")
-                    .withModelPath(modelPath)
-                    .withUseDeepSpeech(true)
+                    .withLanguage("en-US")
+                    .withStoreSamples(true)
                     .withStoreTranscriptions(true)
+                    .withProductTag("product-tag")
+                    .withUseDeepSpeech(true)
+                    .withModelPath(modelPath)
                     .build();
 
-
-
-            // Set the OnClickListener for the record button
-            recordButton.setOnClickListener(v -> {
-                mSpeechService.start(settings, mVoiceSearchListener);
-                Log.d("ModelLoader", "model loaded correctly");
-            });
-
+            mSpeechService.start(settings, mVoiceSearchListener);
         } catch (IOException e) {
-            Log.e("ModelLoader", "Error copying model from assets", e);
+            Log.e("MainActivity", "Failed to copy assets and initialize speech service", e);
         }
     }
 
-
-    SpeechResultCallback mVoiceSearchListener = new SpeechResultCallback() {
-
-        @Override
-        public void onStartListen() {
-            // Handle when the api successfully opened the microphone and started listening
-            recordButton.setText("Listening...");
-        }
-
-        @Override
-        public void onMicActivity(double fftsum) {
-            // Normalize fftsum to a range suitable for your ProgressBar (e.g., 0-100)
-            int progress = (int) (fftsum * 100);
-
-            // Ensure progress stays within the ProgressBar bounds
-            progress = Math.max(0, Math.min(progress, 100));
-
-            // Update the ProgressBar on the UI thread
-            int finalProgress = progress;
-            runOnUiThread(() -> {
-                progBar.setProgress(finalProgress);
-            });
-        }
-
-        @Override
-        public void onDecoding() {
-            // Handle when the speech object changes to decoding state
-        }
-
-        @Override
-        public void onSTTResult(@Nullable STTResult result) {
-            // When the api finished processing and returned a hypothesis
-
-            if (result != null) {
-                String transcript = result.mTranscription;
-                transcriptionBuilder.append(transcript);
-
-                // Update UI or perform any actions with the transcription
-                // For example, you can display the transcription in a TextView in real-time.
-                rText.setText(transcriptionBuilder.toString());
-            }
-        }
-
-        @Override
-        public void onNoVoice() {
-            recordButton.setText("No Voice");
-        }
-
-        @Override
-        public void onError(@SpeechResultCallback.ErrorType int errorType, @Nullable String error) {
-            // Handle when any error occurred
-            Log.e("SpeechService", "Error: " + error);
-
-
-
-
-        }
-    };
-
-    // Function to copy a file from assets to the internal storage
-    private String copyAssetToFile(String assetName) throws IOException {
-        File outFile = new File(getFilesDir(), assetName);
-        if (!outFile.exists()) {
-            try (InputStream is = getAssets().open(assetName);
-                 OutputStream os = new FileOutputStream(outFile)) {
+    private String copyAssetToFile(String filename) throws IOException {
+        File file = new File(getFilesDir(), filename);
+        if (!file.exists()) {
+            try (InputStream is = getAssets().open(filename);
+                 OutputStream os = Files.newOutputStream(file.toPath())) {
                 byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
+                int read;
+                while ((read = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
                 }
             }
         }
-        return outFile.getAbsolutePath();
+        return file.getAbsolutePath();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
-        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted
-            } else {
-                // Permission denied
-            }
+    protected void onDestroy() {
+        super.onDestroy();
+        // Properly stop and release resources from the speech service when the activity is destroyed.
+        if (mSpeechService != null) {
+            mSpeechService.stop(); // Ensure the service is stopped to release resources.
         }
     }
-
-
 }
