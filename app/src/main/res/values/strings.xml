@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Conversation_Monitor</string>
+    <string name="RecBtnText">Record</string>
+    <string name="ModelReadyText">Model Ready</string>
 </resources>
