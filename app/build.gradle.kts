@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.convo_monitor"
-    compileSdk = 31
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.convo_monitor"
@@ -40,5 +40,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation(libs.jna) // Add JNA library dependency
     implementation(group = "com.alphacephei", name = "vosk-android", version = "0.3.32+")
 }

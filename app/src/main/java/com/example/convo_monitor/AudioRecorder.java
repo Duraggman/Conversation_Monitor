@@ -15,6 +15,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -43,12 +44,16 @@ public class AudioRecorder{
     // Vosk variables
     private Recognizer recognizer;
     private Model model;
+
     private Context context; // Context is necessary for file and permission management
+    private TextView textview; // TextView
 
     // Constructor for AudioRecorder
-    public AudioRecorder(Context context) {
+    public AudioRecorder(Context context, TextView transcribedText) {
         this.context = context; // Set the context for the AudioRecorder
+        this.textview = transcribedText; // Set the TextView
     }
+
     public void initRecorder() {
         // Calculate the minimum required buffer size for the specified audio settings
         int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
@@ -110,8 +115,8 @@ public class AudioRecorder{
                     if (recognizer.acceptWaveForm(audioBuffer, readResult)) {
                         // Get the result from the recognizer when an utterance is recognized
                         String result = recognizer.getResult();
-                        // Log the recognized partial result
-                        Log.i("VoskAPI", "Partial Result - " + result);
+                        // Display the partial recognition result in the TextView
+                        textview.post(() -> textview.setText(result));
                     }
                 }
             }

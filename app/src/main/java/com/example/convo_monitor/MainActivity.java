@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        audioRecorder = new AudioRecorder(this);
+        audioRecorder = new AudioRecorder(this, transcribedText);
 
 
         // Check if recording permissions are already granted
@@ -71,14 +71,16 @@ public class MainActivity extends AppCompatActivity {
     protected void startRecording() {
 
         // Start recording when the activity starts
+        recordButton.setText("Stop Recording");
         audioRecorder.startRecording();
         isRecording = true;
     }
 
     protected void stopRecording() {
         // Stop recording when the activity is no longer visible
+        recordButton.setText("Start Recording");
         audioRecorder.stopRecording();
-        isRecording = true;
+        isRecording = false;
     }
 
     @Override
