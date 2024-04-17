@@ -1,3 +1,5 @@
+import java.util.UUID
+
 plugins {
     alias(libs.plugins.androidApplication)
 }
@@ -8,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.convo_monitor"
-        minSdk = 34
+        minSdk = 31
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -31,6 +33,22 @@ android {
     }
 }
 
+val genUUID by tasks.registering {
+    val odir = project.layout.buildDirectory.dir("generated/assets/model-en-us").get().asFile
+    doLast {
+        val uuid = UUID.randomUUID().toString()
+        val ofile = odir.resolve("uuid")
+        odir.mkdirs()
+        ofile.writeText(uuid)
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(genUUID)
+}
+
+
+
 dependencies {
 
     implementation(libs.appcompat)
@@ -40,6 +58,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(libs.jna) // Add JNA library dependency
+    implementation(libs.jna)
     implementation(group = "com.alphacephei", name = "vosk-android", version = "0.3.32+")
 }

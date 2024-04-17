@@ -5,8 +5,6 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.StorageService;
 
-import java.io.IOException;
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
