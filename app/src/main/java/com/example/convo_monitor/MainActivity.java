@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-// import log class from android.util package
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private Button recordButton;
     private TextView transcribedText;
     private AudioRecorder audioRecorder;
-    private static final int REQUEST_AUDIO_PERMISSION_CODE = 200;
+
 
     private boolean isRecording = false;
 
@@ -44,16 +43,7 @@ public class MainActivity extends AppCompatActivity {
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        audioRecorder = new AudioRecorder(this, transcribedText);
-
-
-        // Check if recording permissions are already granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            audioRecorder.initRecorder();  // Initialize components of the recorder that depend on permission.
-        } else {
-            // If not granted, request permissions
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.RECORD_AUDIO}, REQUEST_AUDIO_PERMISSION_CODE);
-        }
+        audioRecorder = new AudioRecorder(this, transcribedText , this);
 
         recordButton.setOnClickListener(v -> {
             if (isRecording) {
@@ -65,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
     }
 
     protected void startRecording() {
@@ -81,15 +70,5 @@ public class MainActivity extends AppCompatActivity {
         recordButton.setText("Start Recording");
         audioRecorder.stopRecording();
         isRecording = false;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_AUDIO_PERMISSION_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            audioRecorder.initRecorder();  // Now permissions are granted, initialize the recorder.
-        } else {
-            Toast.makeText(this, "Permission Denied to record audio", Toast.LENGTH_SHORT).show();
-        }
     }
 }

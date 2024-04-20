@@ -16,10 +16,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
+
     }
 }
 
 rootProject.name = "Convo-Monitor"
 include(":app")
 include(":models")
- 

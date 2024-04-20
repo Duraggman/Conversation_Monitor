@@ -14,6 +14,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -45,16 +46,28 @@ public class AudioRecorder{
 
     private Context context; // Context is necessary for file and permission management
     private TextView textview; // TextView
+    private Activity activity;
+    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    // Calculate the minimum required buffer size for the specified audio settings
+    int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
 
     // Constructor for AudioRecorder
-    public AudioRecorder(Context context, TextView transcribedText) {
+    public AudioRecorder(Context context, TextView transcribedText, Activity activity) {
         this.context = context; // Set the context for the AudioRecorder
         this.textview = transcribedText; // Set the TextView
+        this.activity = activity;
+
+        // Check if user has given permission to record audio, init the model after permission is granted
+        int permissionCheck = ContextCompat.checkSelfPermission(context.getApplicationContext(), android.Manifest.permission.RECORD_AUDIO);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this.activity, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+            initRecorder();  // Initialize components of the recorder that depend on permission.
+        } else {
+            Toast.makeText(context, "Permission to record audio granted", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void initRecorder() {
-        // Calculate the minimum required buffer size for the specified audio settings
-        int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
         // Initialize the buffer array to the minimum buffer size
         audioBuffer = new byte[minBufferSize];
 
@@ -68,15 +81,15 @@ public class AudioRecorder{
     }
     private void setupVosk() {
         // Load the Vosk model from the assets folder using the StorageService class from Vosk
-        StorageService.unpack(this.context, "model-en-us", "model", (model) -> {
-                    // Model is successfully unpacked and ready to be used
+        StorageService.unpack(this.context, "model-en-us", "model",
+                (model) -> {
                     this.model = model;
-                    this.recognizer = new Recognizer(model, SAMPLE_RATE);
-                }, (exception) -> {
-                    // Handle exceptions or failures
-                    Log.e("VoskAPI", "Failed to unpack the model", exception);
-                });
+                    Log.i("VoskApi", "Model unpacked successfully");
+                    // Initialize the recognizer with the model and sample rate
+                },
+                (exception) -> Log.e("VoskApi","Failed to unpack the model" + exception.getMessage()));
     }
+
 
     // Start recording audio
     public void startRecording() {

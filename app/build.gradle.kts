@@ -1,5 +1,3 @@
-import java.util.UUID
-
 plugins {
     alias(libs.plugins.androidApplication)
 }
@@ -36,14 +34,14 @@ android {
 
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("net.java.dev.jna:jna:5.14.0@aar")
+    implementation("com.alphacephei:vosk-android:0.3.47@aar")
+    implementation(project(":models"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(libs.jna)
-    implementation(group = "com.alphacephei", name = "vosk-android", version = "0.3.32+")
 }
