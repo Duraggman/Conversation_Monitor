@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Convo-Monitor"
 include(":app")
+include(":models")
  

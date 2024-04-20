@@ -33,20 +33,6 @@ android {
     }
 }
 
-val genUUID by tasks.registering {
-    val odir = project.layout.buildDirectory.dir("generated/assets/model-en-us").get().asFile
-    doLast {
-        val uuid = UUID.randomUUID().toString()
-        val ofile = odir.resolve("uuid")
-        odir.mkdirs()
-        ofile.writeText(uuid)
-    }
-}
-
-tasks.named("preBuild").configure {
-    dependsOn(genUUID)
-}
-
 
 
 dependencies {
