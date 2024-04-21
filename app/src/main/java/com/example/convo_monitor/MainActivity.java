@@ -1,29 +1,22 @@
 package com.example.convo_monitor;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.util.Log;
-import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
-    // TODO: Use and test the AudioRecorder class in the MainActivity
+
 
     // Creating variable for the main activity attributes
     private Button recordButton;
     private TextView transcribedText;
-    private AudioRecorder audioRecorder;
+    private AudioManager audioManager;
 
 
     private boolean isRecording = false;
@@ -43,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        audioRecorder = new AudioRecorder(this, transcribedText , this);
+        audioManager = new AudioManager(this, transcribedText , this);
 
         recordButton.setOnClickListener(v -> {
             if (isRecording) {
@@ -60,15 +53,15 @@ public class MainActivity extends AppCompatActivity {
     protected void startRecording() {
 
         // Start recording when the activity starts
-        recordButton.setText("Stop Recording");
-        audioRecorder.startRecording();
+        recordButton.setText(R.string.stopRecording);
+        audioManager.startRecording();
         isRecording = true;
     }
 
     protected void stopRecording() {
         // Stop recording when the activity is no longer visible
-        recordButton.setText("Start Recording");
-        audioRecorder.stopRecording();
+        recordButton.setText(R.string.startRecording);
+        audioManager.stopRecording();
         isRecording = false;
     }
 }

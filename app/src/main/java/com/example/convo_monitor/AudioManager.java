@@ -5,6 +5,8 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.StorageService;
 
+//TarsosDSP imports
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -14,16 +16,18 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-/**
- * This class is responsible for managing audio recording.
- */
+import java.io.IOException;
 
-public class AudioRecorder{
+/**
+ * This class is responsible for managing audio.
+ */
+// TODO: Implement TarsosDSP for Speaker Diarization.
+
+public class AudioManager {
     // Using 16 kHz sample rate for audio recording for compatibility with speech recognition APIs
     private static final int SAMPLE_RATE = 16000;
     // Use mono channel for microphone input
@@ -52,7 +56,7 @@ public class AudioRecorder{
     int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
 
     // Constructor for AudioRecorder
-    public AudioRecorder(Context context, TextView transcribedText, Activity activity) {
+    public AudioManager(Context context, TextView transcribedText, Activity activity) {
         this.context = context; // Set the context for the AudioRecorder
         this.textview = transcribedText; // Set the TextView
         this.activity = activity;
@@ -63,7 +67,7 @@ public class AudioRecorder{
             ActivityCompat.requestPermissions(this.activity, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
             initRecorder();  // Initialize components of the recorder that depend on permission.
         } else {
-            Toast.makeText(context, "Permission to record audio granted", Toast.LENGTH_SHORT).show();
+            initRecorder();
         }
     }
 
@@ -84,10 +88,15 @@ public class AudioRecorder{
         StorageService.unpack(this.context, "model-en-us", "model",
                 (model) -> {
                     this.model = model;
-                    Log.i("VoskApi", "Model unpacked successfully");
+                    Log.i("AudioRecorder", "Model unpacked successfully");
                     // Initialize the recognizer with the model and sample rate
+                    try {
+                        recognizer = new Recognizer(model, SAMPLE_RATE);
+                    } catch (IOException e) {
+                        Log.e("AudioRecorder", "Failed to initialize the recognizer" + e.getMessage());
+                    }
                 },
-                (exception) -> Log.e("VoskApi","Failed to unpack the model" + exception.getMessage()));
+                (exception) -> Log.e("AudioRecorder","Failed to unpack the model" + exception.getMessage()));
     }
 
 

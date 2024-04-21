@@ -38,9 +38,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+
     implementation("net.java.dev.jna:jna:5.14.0@aar")
     implementation("com.alphacephei:vosk-android:0.3.47@aar")
     implementation(project(":models"))
+    implementation("be.tarsos.dsp:core:2.5")
+    implementation("be.tarsos.dsp:jvm:2.5")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
