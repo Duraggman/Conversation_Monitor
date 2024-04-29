@@ -16,7 +16,8 @@ public class MainActivity extends AppCompatActivity {
     // Creating variable for the main activity attributes
     private Button recordButton;
     private TextView transcribedText;
-    private AudioManager audioManager;
+    private RTTranscriberVosk RTTranscriberVosk;
+    public VoiceActivityDetector vad;
 
 
     private boolean isRecording = false;
@@ -36,7 +37,9 @@ public class MainActivity extends AppCompatActivity {
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        audioManager = new AudioManager(this, transcribedText , this);
+        RTTranscriberVosk = new RTTranscriberVosk(this, transcribedText , this);
+        vad = new VoiceActivityDetector(this, new byte[0]);
+
 
         recordButton.setOnClickListener(v -> {
             if (isRecording) {
@@ -54,14 +57,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Start recording when the activity starts
         recordButton.setText(R.string.stopRecording);
-        audioManager.startRecording();
+        RTTranscriberVosk.startRecording();
         isRecording = true;
     }
 
     protected void stopRecording() {
         // Stop recording when the activity is no longer visible
         recordButton.setText(R.string.startRecording);
-        audioManager.stopRecording();
+        RTTranscriberVosk.stopRecording();
         isRecording = false;
     }
 }
