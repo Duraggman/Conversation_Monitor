@@ -5,8 +5,6 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.StorageService;
 
-//TarsosDSP imports
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -25,9 +23,9 @@ import java.io.IOException;
 /**
  * This class is responsible for managing audio.
  */
-// TODO: Implement TarsosDSP for Speaker Diarization.
+// TODO: 1. Find out why class no longer works2.Test out different silence thresholds, frame sizes and audio buffer sizes to optimize performance
 
-public class AudioManager {
+public class RTTranscriberVosk {
     // Using 16 kHz sample rate for audio recording for compatibility with speech recognition APIs
     private static final int SAMPLE_RATE = 16000;
     // Use mono channel for microphone input
@@ -48,15 +46,18 @@ public class AudioManager {
     private Recognizer recognizer;
     private Model model;
 
+    // Threshold for silence detection. Adjust based on your environment.
+    private static final double SILENCE_THRESHOLD = -70.0;
+
     private Context context; // Context is necessary for file and permission management
     private TextView textview; // TextView
     private Activity activity;
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     // Calculate the minimum required buffer size for the specified audio settings
-    int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
+    int minBufferSize = SAMPLE_RATE;
 
     // Constructor for AudioRecorder
-    public AudioManager(Context context, TextView transcribedText, Activity activity) {
+    public RTTranscriberVosk(Context context, TextView transcribedText, Activity activity) {
         this.context = context; // Set the context for the AudioRecorder
         this.textview = transcribedText; // Set the TextView
         this.activity = activity;

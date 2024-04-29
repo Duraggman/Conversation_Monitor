@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.2"
+gradle = "7.0.4"
 jna = "5.14.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -8,9 +9,11 @@ appcompat = "1.6.1"
 material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
+silero = "2.0.6"
 voskAndroid = "0.3.47"
 
 [libraries]
+gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -19,6 +22,7 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+silero = { module = "com.github.gkonovalov.android-vad:silero", version.ref = "silero" }
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "voskAndroid" }
 
 [plugins]
