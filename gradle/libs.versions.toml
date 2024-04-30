@@ -1,7 +1,8 @@
 [versions]
-agp = "8.3.2"
+agp = "8.4.0"
 gradle = "7.0.4"
 jna = "5.14.0"
+jsonVersion = "20230227"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -15,6 +16,7 @@ voskAndroid = "0.3.47"
 [libraries]
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+json-json = { module = "org.json:json", version.ref = "jsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

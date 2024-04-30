@@ -1,10 +1,15 @@
 package com.example.convo_monitor;
 
 //Vosk imports
+import org.json.JSONException;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.StorageService;
 
+//json imports
+import org.json.JSONObject;
+
+//Android imports
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -23,7 +28,7 @@ import java.io.IOException;
 /**
  * This class is responsible for managing audio.
  */
-// TODO: 1. Find out why class no longer works2.Test out different silence thresholds, frame sizes and audio buffer sizes to optimize performance
+// TODO: 1. Test out different silence thresholds, frame sizes and audio buffer sizes to optimize performance
 
 public class RTTranscriberVosk {
     // Using 16 kHz sample rate for audio recording for compatibility with speech recognition APIs
@@ -39,7 +44,7 @@ public class RTTranscriberVosk {
     private boolean isRecording = false;
     // Buffer to hold the audio data during each read operation
     private byte[] audioBuffer;
-
+    // Request code for audio permission request
     private static final int REQUEST_AUDIO_PERMISSION_CODE = 200;
 
     // Vosk variables
@@ -54,7 +59,7 @@ public class RTTranscriberVosk {
     private Activity activity;
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     // Calculate the minimum required buffer size for the specified audio settings
-    int minBufferSize = SAMPLE_RATE;
+    int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
 
     // Constructor for AudioRecorder
     public RTTranscriberVosk(Context context, TextView transcribedText, Activity activity) {
@@ -73,8 +78,8 @@ public class RTTranscriberVosk {
     }
 
     public void initRecorder() {
-        // Initialize the buffer array to the minimum buffer size
-        audioBuffer = new byte[minBufferSize];
+        // Initialize the buffer array to the size of the sample rate will tweak this later
+        audioBuffer = new byte[16000];
 
         // Check if the required permissions are granted
         if (ContextCompat.checkSelfPermission(this.context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -100,7 +105,6 @@ public class RTTranscriberVosk {
                 (exception) -> Log.e("AudioRecorder","Failed to unpack the model" + exception.getMessage()));
     }
 
-
     // Start recording audio
     public void startRecording() {
         if (recorder.getState() == AudioRecord.STATE_INITIALIZED && recognizer != null) {
@@ -115,9 +119,6 @@ public class RTTranscriberVosk {
         if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
             isRecording = false;
             recorder.stop();
-            if (recognizer != null) {
-                recognizer.close(); // Free up resources
-            }
         }
     }
 
@@ -134,10 +135,12 @@ public class RTTranscriberVosk {
                 if (readResult > 0 && recognizer != null) {
                     // Feed the audio data to the recognizer and check if a complete utterance is recognized
                     if (recognizer.acceptWaveForm(audioBuffer, readResult)) {
-                        // Get the result from the recognizer when an utterance is recognized
-                        String result = recognizer.getResult();
+                        // Get the result from the recognizer when an utterance is recognized. Remove
+                        String result = jsonTostring(recognizer.getResult());
                         // Display the partial recognition result in the TextView
                         textview.post(() -> textview.setText(result));
+                        // Log the partial recognition result
+                        Log.i("STT", "Partial Result - " + recognizer.getPartialResult());
                     }
                 }
             }
@@ -150,5 +153,44 @@ public class RTTranscriberVosk {
                 Log.i("VoskAPI", "Final Result - " + finalResult);
             }
         }).start(); // Start the thread
+    }
+
+    // Release the resources used by the AudioRecorder
+    public void close() {
+        // Stop the recording if it is currently active
+        if (isRecording) {
+            stopRecording();
+        }
+        if (recorder != null) {
+            recorder.release(); // Release the AudioRecord resources
+        }
+        if (recognizer != null) {
+            recognizer.close(); // Free up resources
+        }
+        // Release the model
+        if (model != null) {
+            model.close();
+        }
+        // Clear the reference to the recognizer and model
+        recognizer = null;
+        model = null;
+        recorder = null;
+        audioBuffer = null;
+    }
+
+    public static String jsonTostring(String json) {
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = new JSONObject(json);
+        // Check if the key "text" exists to avoid JSONException
+        if (jsonObject.has("text")) {
+            return jsonObject.getString("text");
+        } else {
+            return json; // or any default value you deem appropriate
+        }
+        } catch (JSONException e) {
+            Log.e("JsonParser", "Error parsing JSON: " + e.getMessage());
+            return null;
+        }
     }
 }

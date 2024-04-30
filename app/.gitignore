@@ -15,14 +15,12 @@
 .cxx
 local.properties
 <<<<<<< HEAD
-.fake
 =======
-
 # Android Studio
 .idea/
 *.iws
 *.ipr
-
+.fake
 # Gradle
 .gradle/
 gradlew
