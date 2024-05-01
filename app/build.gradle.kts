@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.androidApplication)
-    id("com.chaquo.python")
 }
 
 android {

@@ -1,3 +1,4 @@
+/**
 package com.example.convo_monitor;
 
 import android.app.Activity;
@@ -9,7 +10,7 @@ import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 
-public class STTSilero extends RTTranscriberVosk {
+public class STTSilero extends VoskTranscriber {
     private PyObject stt;
     private Python py;
     // Threshold for silence detection. Adjust based on your environment.
@@ -52,3 +53,5 @@ public class STTSilero extends RTTranscriberVosk {
         stt.callAttr("close");
     }
 }
+
+**/

@@ -1,6 +1,8 @@
 package com.example.convo_monitor;
 
+import android.media.AudioFormat;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -15,9 +17,24 @@ public class MainActivity extends AppCompatActivity {
 
     // Creating variable for the main activity attributes
     private Button recordButton;
+    public VoskProvider vosk;
     private TextView transcribedText;
-    private RTTranscriberVosk RTTranscriberVosk;
+    private VoskTranscriber vt;
     public VoiceActivityDetector vad;
+    public SpeakerDiarization sd;
+    // Using 16 kHz sample rate for audio recording for compatibility with speech recognition APIs
+    public static int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    public static  int SAMPLE_RATE = 16000;
+    // Use mono channel for microphone input
+    public static  int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    // Define audio format as 16-bit PCM
+    public static  int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    // Buffer to hold the audio data during each read operation
+    public static byte[] audioBuffer = new byte[16000];
+
+    // Request code for audio permission request
+    // Threshold for silence detection. Adjust based on your environment.
+    //public static final double SILENCE_THRESHOLD = -70.0;
 
 
     private boolean isRecording = false;
@@ -37,34 +54,23 @@ public class MainActivity extends AppCompatActivity {
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        RTTranscriberVosk = new RTTranscriberVosk(this, transcribedText , this);
-        vad = new VoiceActivityDetector(this, new byte[0]);
-
-
+        vosk = new VoskProvider(this, this);
+        vt = new VoskTranscriber(vosk, transcribedText);
+        //sd = new SpeakerDiarization(this, this, vosk);
+        //vad = new VoiceActivityDetector(this, new byte[0]);
         recordButton.setOnClickListener(v -> {
             if (isRecording) {
                 // Stop recording when the button is clicked
-                stopRecording();
+                vt.stopRecording();
             } else {
                 // Start recording when the button is clicked
-                startRecording();
+                vt.startRecording();
 
             }
         });
     }
 
-    protected void startRecording() {
 
-        // Start recording when the activity starts
-        recordButton.setText(R.string.stopRecording);
-        RTTranscriberVosk.startRecording();
-        isRecording = true;
-    }
 
-    protected void stopRecording() {
-        // Stop recording when the activity is no longer visible
-        recordButton.setText(R.string.startRecording);
-        RTTranscriberVosk.stopRecording();
-        isRecording = false;
-    }
+
 }
