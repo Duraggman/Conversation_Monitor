@@ -12,7 +12,6 @@ import org.vosk.SpeakerModel;
 import org.vosk.android.StorageService;
 import org.vosk.Model;
 import java.io.IOException;
-import android.content.res.AssetManager;
 
 public class VoskProvider {
     private Recognizer recognizer;
@@ -30,7 +29,7 @@ public class VoskProvider {
         if(checkAndRequestAudioPermissions(activity, context)){
             initRecorder();
         }
-        initIDModel();
+        initRCModel();
     }
 
     @SuppressLint("MissingPermission")
@@ -53,11 +52,12 @@ public class VoskProvider {
 
     private void initRCModel(){
         // Load the Vosk model from the assets folder using the StorageService class from Vosk
-        StorageService.unpack(this.context, "model-en-us", "model-en",
+        StorageService.unpack(this.context, "model-en-us", "model",
                 (model) -> {
                     this.vpModel = model;
                     Log.i("vp", "rec Model unpacked successfully");
                     Log.i("vosk", "Model unpacked successfully");
+                    initRecognizer();
                 },
                 (exception) -> {
                     Log.e("vp", "Failed to unpack the rec model" + exception.getMessage());
@@ -65,14 +65,22 @@ public class VoskProvider {
                 });
     }
     private void initIDModel() {
-        AssetManager assetManager = this.context.getAssets();
         try {
-            this.idModel = new SpeakerModel("assets/model-spk");
+            String modelPath = this.utils.copyAssetsToLocalStorage(this.context, "model-spk");
+            try {
+                this.idModel = new SpeakerModel(modelPath);
+                Log.i("vp", "ID Model initialized successfully");
+                Log.i("vosk", "ID Model initialized successfully");
+            } catch (IOException e) {
+                Log.e("vp", "Failed to initialize the ID model " + e.getMessage());
+                Log.e("vosk", "Failed to initialize the ID model " + e.getMessage());
+            }
         } catch (IOException e) {
-            Log.e("vp", "Failed to initialize the ID model " + e.getMessage());
-            Log.e("vosk", "Failed to initialize the ID model " + e.getMessage());
+            Log.e("vp", "Failed to copy the ID model to local storage " + e.getMessage());
+            Log.e("vosk", "Failed to copy the ID model to local storage " + e.getMessage());
         }
     }
+
 
     private void initRecognizer(){
         try {

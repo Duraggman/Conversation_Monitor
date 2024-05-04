@@ -44,7 +44,7 @@ public class VoskTranscriber {
             isRecording = true;
             recBtm.setText(R.string.stopRecording);
             this.vosk.getRecorder().startRecording();
-            boolean rl = false;
+            boolean rl = true;
             if (!rl) {
                 recordingLoopJ();
             } else {

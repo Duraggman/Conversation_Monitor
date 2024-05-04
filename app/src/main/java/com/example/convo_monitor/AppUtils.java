@@ -3,11 +3,20 @@ package com.example.convo_monitor;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+
 public class AppUtils {
     private int SAMPLE_RATE;
     private byte[] audioBuffer;
@@ -28,17 +37,6 @@ public class AppUtils {
         FORMAT = AudioFormat.ENCODING_PCM_16BIT;
         int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
         BufferSize = Math.max(minBufferSize, 2048);
-    }
-
-    public void copyFolder(){
-        AssetManager am = getAssets();
-        String[] files = null;
-
-        try {
-            files = assetManager.list("folderName"); // Replace "folderName" with your folder name in assets
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
      static Boolean checkAndRequestAudioPermissions(Activity activity, Context context) {
@@ -84,51 +82,36 @@ public class AppUtils {
         this.BufferSize = BufferSize;
     }
 
-    private static void copyFile(InputStream in, OutputStream out) throws IOException {
+    public String copyAssetsToLocalStorage(Context context, String path)  throws IOException{
+        AssetManager assetManager = context.getAssets();
+        String destinationPath = context.getFilesDir().getAbsolutePath();
+        String[] files = null;
+            files = assetManager.list(path);
+            File destinationFolder = new File(destinationPath);
+            if (!destinationFolder.exists()) {
+                destinationFolder.mkdir(); // Create the folder if it does not exist
+            }
+
+            for (String filename : files) {
+                InputStream in = assetManager.open(path + "/" + filename);
+                File outFile = new File(destinationFolder, filename);
+                OutputStream out = Files.newOutputStream(outFile.toPath());
+                copyFile(in, out);
+                in.close();
+                out.flush();
+                out.close();
+            }
+
+        return destinationPath; // Return the path to the directory where files are copied
+    }
+
+    private void copyFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
-        while ((read = in.read(buffer)) != -1) {
+        while((read = in.read(buffer)) != -1){
             out.write(buffer, 0, read);
         }
     }
 
-    public static void copyFolderFromAssets(Context context, String folderName) {
-        AssetManager assetManager = context.getAssets();
-        String[] files = null;
-        try {
-            files = assetManager.list(folderName);
-            if (files != null) {
-                for (String filename : files) {
-                    InputStream in = null;
-                    OutputStream out = null;
-                    try {
-                        in = assetManager.open(folderName + "/" + filename);
-                        File outFile = new File(context.getFilesDir(), filename);
-                        out = new FileOutputStream(outFile);
-                        copyFile(in, out);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (in != null) {
-                            try {
-                                in.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        if (out != null) {
-                            try {
-                                out.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
