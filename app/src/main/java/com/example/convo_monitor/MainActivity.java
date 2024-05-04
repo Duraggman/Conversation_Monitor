@@ -2,7 +2,6 @@ package com.example.convo_monitor;
 
 import android.media.AudioFormat;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -16,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Creating variable for the main activity attributes
+    public AppUtils utils;
     private Button recordButton;
     public VoskProvider vosk;
     private TextView transcribedText;
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Call the parent class constructor
         super.onCreate(savedInstanceState);
+        //Thread.setDefaultUncaughtExceptionHandler(new CustomExceptionHandler());
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -50,22 +51,24 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        utils = new AppUtils();
 
         // assigning the main activity attributes to the corresponding xml elements and classes
         recordButton = findViewById(R.id.RecordButton);
         transcribedText = findViewById(R.id.TranscribedView);
-        vosk = new VoskProvider(this, this);
-        vt = new VoskTranscriber(vosk, transcribedText);
+        vosk = new VoskProvider(this, this, utils);
+        vt = new VoskTranscriber(vosk, utils, transcribedText, recordButton);
         //sd = new SpeakerDiarization(this, this, vosk);
         //vad = new VoiceActivityDetector(this, new byte[0]);
         recordButton.setOnClickListener(v -> {
             if (isRecording) {
                 // Stop recording when the button is clicked
                 vt.stopRecording();
+                isRecording = false;
             } else {
                 // Start recording when the button is clicked
                 vt.startRecording();
-
+                isRecording = true;
             }
         });
     }

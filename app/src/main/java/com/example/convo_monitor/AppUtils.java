@@ -4,19 +4,31 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
+import android.media.AudioRecord;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 public class AppUtils {
-    private int SAMPLE_RATE = 16000;
-    private byte[] audioBuffer = new byte[SAMPLE_RATE];
+    private int SAMPLE_RATE;
+    private byte[] audioBuffer;
     public static int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
     // Use mono channel for microphone input
-    private int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    private int CHANNEL;
     // Define audio format as 16-bit PCM
-     int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    private int BufferSize = audioBuffer.length;
+     int FORMAT;
+    private int BufferSize;
+
+    public AppUtils() {
+        SAMPLE_RATE = 16000;
+        audioBuffer = new byte[2048];
+        // Use mono channel for microphone input
+        CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+        // Define audio format as 16-bit PCM
+        FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+        int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT);
+        BufferSize = Math.max(minBufferSize, 2048);
+    }
 
      static Boolean checkAndRequestAudioPermissions(Activity activity, Context context) {
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -32,9 +44,7 @@ public class AppUtils {
     public byte[] getAudioBuffer() {
         return audioBuffer;
     }
-    public int getPERMISSIONS_REQUEST_RECORD_AUDIO() {
-        return PERMISSIONS_REQUEST_RECORD_AUDIO;
-    }
+
     public int getCHANNEL() {
         return CHANNEL;
     }
@@ -62,6 +72,5 @@ public class AppUtils {
     public void setBufferSize(int BufferSize) {
         this.BufferSize = BufferSize;
     }
-
 }
 

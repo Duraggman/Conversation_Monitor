@@ -14,18 +14,16 @@ import java.io.IOException;
 
 public class VoskProvider {
     private Recognizer recognizer;
-    private AppUtils utils;
-    private Model vpModel;
-    private final Context context;
-    private final Activity activity;
     private AudioRecord recorder;
-    private Boolean isRecording = false;
+    private Model vpModel;
+    private final AppUtils utils;
+
+    private final Context context;
     private Boolean isCogInit = false;
 
-    public VoskProvider(Context context, Activity activity) {
+    public VoskProvider(Context context, Activity activity, AppUtils utils ) {
+        this.utils = utils;
         this.context = context;
-        this.activity = activity;
-        utils = new AppUtils();
         if(checkAndRequestAudioPermissions(activity, context)){
             initRecorder();
         }
@@ -77,8 +75,7 @@ public class VoskProvider {
         }
     }
 
-    public Recognizer getRecognizer(){
-        return recognizer;}
+    public Recognizer getRecognizer(){return recognizer;}
     public AudioRecord getRecorder(){
         return recorder;
     }
