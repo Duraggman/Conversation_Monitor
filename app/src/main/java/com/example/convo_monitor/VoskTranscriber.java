@@ -5,6 +5,9 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * This class is responsible for managing audio.
  */
@@ -41,7 +44,12 @@ public class VoskTranscriber {
             isRecording = true;
             recBtm.setText(R.string.stopRecording);
             this.vosk.getRecorder().startRecording();
-            recordingLoop();
+            boolean rl = false;
+            if (!rl) {
+                recordingLoopJ();
+            } else {
+                recordingLoop();
+            }
         }
         else {
             Log.e("vt", "Audio Record can't initialize!");
@@ -81,4 +89,44 @@ public class VoskTranscriber {
             }
         }).start();
     }
+
+    private void recordingLoopJ() {
+        new Thread(() -> {
+            while (isRecording) {
+                int readResult = this.vosk.getRecorder().read(utils.getAudioBuffer(), 0, utils.getBufferSize());
+                if (readResult > 0 && this.vosk.getRecognizer() != null) {
+                    if (this.vosk.isCogInit()) {
+                        if(this.vosk.getRecognizer().acceptWaveForm(utils.getAudioBuffer(), readResult)) {
+                            String result = jsonTostring(this.vosk.getRecognizer().getResult());
+                            textview.post(() -> textview.setText(result));
+                        }
+                    }
+                }
+            }
+            if (this.vosk.getRecognizer() != null) {
+                String finalResult = this.vosk.getRecognizer().getFinalResult();
+                Log.i("vt", "Final Result - " + finalResult);
+                Log.i("vosk", "Final Result - " + finalResult);
+            }
+        }).start();
+    }
+
+
+
+    public static String jsonTostring(String json) {
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(json);
+            // Check if the key "text" exists to avoid JSONException
+            if (jsonObject.has("text")) {
+                return jsonObject.getString("text");
+            } else {
+                return json; // or any default value you deem appropriate
+            }
+        } catch (JSONException e) {
+            Log.e("JsonParser", "Error parsing JSON: " + e.getMessage());
+            return null;
+        }
+    }
 }
+
