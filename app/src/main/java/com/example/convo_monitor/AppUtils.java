@@ -30,6 +30,17 @@ public class AppUtils {
         BufferSize = Math.max(minBufferSize, 2048);
     }
 
+    public void copyFolder(){
+        AssetManager am = getAssets();
+        String[] files = null;
+
+        try {
+            files = assetManager.list("folderName"); // Replace "folderName" with your folder name in assets
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
      static Boolean checkAndRequestAudioPermissions(Activity activity, Context context) {
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((activity),new String[] {android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_RECORD_AUDIO);
@@ -71,6 +82,53 @@ public class AppUtils {
     }
     public void setBufferSize(int BufferSize) {
         this.BufferSize = BufferSize;
+    }
+
+    private static void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
+
+    public static void copyFolderFromAssets(Context context, String folderName) {
+        AssetManager assetManager = context.getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list(folderName);
+            if (files != null) {
+                for (String filename : files) {
+                    InputStream in = null;
+                    OutputStream out = null;
+                    try {
+                        in = assetManager.open(folderName + "/" + filename);
+                        File outFile = new File(context.getFilesDir(), filename);
+                        out = new FileOutputStream(outFile);
+                        copyFile(in, out);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (in != null) {
+                            try {
+                                in.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (out != null) {
+                            try {
+                                out.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
