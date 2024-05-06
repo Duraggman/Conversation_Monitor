@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.Locale;
 
 /**
  * This class is responsible for managing audio.
@@ -28,13 +29,13 @@ public class VoskTranscriber {
     //private static final double SILENCE_THRESHOLD = -70.0;
     private final VoskProvider vosk;
 
-    // Constructor for AudioRecorder
-    public VoskTranscriber(VoskProvider vosk, AppUtils utils, TextView textview, Button recBtm) {
+    // Constructor for Transcriber class
+    public VoskTranscriber(VoskProvider vosk, AppUtils utils, UiController ui) {
         this.vosk = vosk;
         Log.i("vt", "vosk: " + this.vosk);
-        this.textview = textview;
+        this.textview = ui.getTransTextView();
         this.utils = utils;
-        this.recBtm = recBtm;
+        this.recBtm = ui.getRecButton();
     }
 
     // Start recording audio
@@ -44,14 +45,13 @@ public class VoskTranscriber {
             isRecording = true;
             recBtm.setText(R.string.stopRecording);
             this.vosk.getRecorder().startRecording();
-            boolean rl = true;
+            boolean rl = false;
             if (!rl) {
                 recordingLoopJ();
             } else {
                 recordingLoop();
             }
-        }
-        else {
+        } else {
             Log.e("vt", "Audio Record can't initialize!");
             Log.e("vosk", "Audio Record can't initialize!");
         }
@@ -75,8 +75,9 @@ public class VoskTranscriber {
                 int readResult = this.vosk.getRecorder().read(utils.getAudioBuffer(), 0, utils.getBufferSize());
                 if (readResult > 0 && this.vosk.getRecognizer() != null) {
                     if (this.vosk.isCogInit()) {
-                        if(this.vosk.getRecognizer().acceptWaveForm(utils.getAudioBuffer(), readResult)) {
+                        if (this.vosk.getRecognizer().acceptWaveForm(utils.getAudioBuffer(), readResult)) {
                             String result = this.vosk.getRecognizer().getResult();
+                            Log.i("vt", "RT result: - " + result);
                             textview.post(() -> textview.setText(result));
                         }
                     }
@@ -96,8 +97,8 @@ public class VoskTranscriber {
                 int readResult = this.vosk.getRecorder().read(utils.getAudioBuffer(), 0, utils.getBufferSize());
                 if (readResult > 0 && this.vosk.getRecognizer() != null) {
                     if (this.vosk.isCogInit()) {
-                        if(this.vosk.getRecognizer().acceptWaveForm(utils.getAudioBuffer(), readResult)) {
-                            String result = jsonTostring(this.vosk.getRecognizer().getResult());
+                        if (this.vosk.getRecognizer().acceptWaveForm(utils.getAudioBuffer(), readResult)) {
+                            String result = AppUtils.jsonPartialToString(this.vosk.getRecognizer().getPartialResult());
                             textview.post(() -> textview.setText(result));
                         }
                     }
@@ -112,21 +113,4 @@ public class VoskTranscriber {
     }
 
 
-
-    public static String jsonTostring(String json) {
-        JSONObject jsonObject;
-        try {
-            jsonObject = new JSONObject(json);
-            // Check if the key "text" exists to avoid JSONException
-            if (jsonObject.has("text")) {
-                return jsonObject.getString("text");
-            } else {
-                return json; // or any default value you deem appropriate
-            }
-        } catch (JSONException e) {
-            Log.e("JsonParser", "Error parsing JSON: " + e.getMessage());
-            return null;
-        }
-    }
 }
-

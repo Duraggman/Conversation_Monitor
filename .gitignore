@@ -13,7 +13,5 @@
 /models/build
 /captures
 .externalNativeBuild
-.cxx
-local.properties
-
+/models/build/generated
 .fake

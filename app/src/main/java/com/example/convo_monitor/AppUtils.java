@@ -11,11 +11,16 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Locale;
 
 public class AppUtils {
     private int SAMPLE_RATE;
@@ -113,5 +118,52 @@ public class AppUtils {
         }
     }
 
+    public static String jsonSpkToString(String json) {
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(json);
+            String text = jsonObject.optString("text", "No transcription available");
+            int speakerId = jsonObject.optInt("speaker", 0); // Default to 0 if no speaker ID
+            double speakerConfidence = jsonObject.optDouble("confidence", 0.0); // Default to 0.0 if no confidence score
+            return String.format(Locale.UK, "Speaker %d: %s (Confidence: %.2f%%)", speakerId, text, speakerConfidence * 100);
+        } catch (JSONException e) {
+            Log.e("JsonParser", "Error parsing JSON: " + e.getMessage());
+            return "Parsing error: " + e.getMessage();
+        }
+    }
+
+    public static String jsonPartialToString(String json) {
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(json);
+            String partialText = jsonObject.optString("partial", "");
+            int speakerId = jsonObject.optInt("speaker", 0); // Default to 0 if no speaker ID
+            double speakerConfidence = jsonObject.optDouble("confidence", 0.0); // Default to 0.0 if no confidence score
+            return partialText.isEmpty() ? "No partial transcription available" : String.format(Locale.UK, "Speaker %d (Partial): %s (Confidence: %.2f%%)", speakerId, partialText, speakerConfidence * 100);
+        } catch (JSONException e) {
+            Log.e("JsonParser", "Error parsing JSON: " + e.getMessage());
+            return "Parsing error: " + e.getMessage();
+        }
+    }
+
+    public static double[] jsonSpkVectorExtract(String json) {
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(json);
+            JSONArray spkVectorArray = jsonObject.optJSONArray("spk");
+            if (spkVectorArray == null) {
+                Log.e("utils", "No 'spk' vector found in JSON");
+                return new double[0]; // Return an empty array if no "spk" vector found
+            }
+            double[] spkVector = new double[spkVectorArray.length()];
+            for (int i = 0; i < spkVectorArray.length(); i++) {
+                spkVector[i] = spkVectorArray.optDouble(i, 0.0); // Default to 0.0 if any entry is not a valid double
+            }
+            return spkVector;
+        } catch (JSONException e) {
+            Log.e("utils", "Error parsing JSON: " + e.getMessage());
+            return new double[0]; // Return an empty array on parsing error
+        }
+    }
 }
 

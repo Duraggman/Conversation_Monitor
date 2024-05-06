@@ -7,6 +7,8 @@ import android.content.Context;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
+import android.widget.Toast;
+
 import org.vosk.Recognizer;
 import org.vosk.SpeakerModel;
 import org.vosk.android.StorageService;
@@ -26,10 +28,18 @@ public class VoskProvider {
     public VoskProvider(Context context, Activity activity, AppUtils utils ) {
         this.utils = utils;
         this.context = context;
-        if(checkAndRequestAudioPermissions(activity, context)){
+        try {
+            if (checkAndRequestAudioPermissions(activity, context)) {
+                initRecorder();
+            }
             initRecorder();
+            initRCModel();
+            initIDModel();
+        } catch (Exception e) {
+            Log.e("vp", "Failed to initialize the VoskProvider" + e.getMessage());
+            Log.e("vosk", "Failed to initialize the VoskProvider" + e.getMessage());
+            Toast.makeText(this.context, "Permissions not granted.", Toast.LENGTH_SHORT).show();
         }
-        initRCModel();
     }
 
     @SuppressLint("MissingPermission")
@@ -84,7 +94,7 @@ public class VoskProvider {
 
     private void initRecognizer(){
         try {
-            recognizer = new Recognizer(this.vpModel, utils.getSAMPLE_RATE());
+            recognizer = new Recognizer(this.vpModel, utils.getSAMPLE_RATE(), this.idModel);
             Log.i("vp", "Recognizer initialized successfully");
             Log.i("vosk", "Recognizer initialized successfully");
             isCogInit = true;
