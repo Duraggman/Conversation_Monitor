@@ -18,12 +18,12 @@ import java.io.IOException;
 public class VoskProvider {
     private Recognizer recognizer;
     private AudioRecord recorder;
-    private Model vpModel;
+    private Model tModel;
     private SpeakerModel idModel;
     private final AppUtils utils;
 
     private final Context context;
-    private Boolean isCogInit = false;
+    private boolean isCogInit = false;
 
     public VoskProvider(Context context, Activity activity, AppUtils utils ) {
         this.utils = utils;
@@ -32,8 +32,10 @@ public class VoskProvider {
             if (checkAndRequestAudioPermissions(activity, context)) {
                 initRecorder();
             }
-            initRecorder();
-            initRCModel();
+            else {
+                initRecorder();
+            }
+            initTModel();
             initIDModel();
         } catch (Exception e) {
             Log.e("vp", "Failed to initialize the VoskProvider" + e.getMessage());
@@ -46,13 +48,15 @@ public class VoskProvider {
     private void initRecorder(){
         // Initialize the AudioRecord object
         try {
-            recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, utils.getSAMPLE_RATE(), utils.getCHANNEL(), utils.getFORMAT(), utils.getBufferSize());
+            // using a local recorder object
+            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, utils.getSAMPLE_RATE(), utils.getCHANNEL(), utils.getFORMAT(), utils.getBufferSize());
             if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                 Log.e("vp", "Audio Record can't initialize!");
                 Log.e("vosk", "Audio Record can't initialize!");
             } else {
                 Log.i("vp", "Recorder initialized successfully");
                 Log.i("vosk", "Recorder initialized successfully");
+                this.recorder = recorder;
             }
         } catch (Exception e) {
             Log.e("vp", "Failed to initialize the recorder" + e.getMessage());
@@ -60,16 +64,16 @@ public class VoskProvider {
         }
     }
 
-    private void initRCModel(){
+
+    private void initTModel(){
         // Load the Vosk model from the assets folder using the StorageService class from Vosk
         StorageService.unpack(this.context, "model-en-us", "model",
                 (model) -> {
-                    this.vpModel = model;
                     Log.i("vp", "rec Model unpacked successfully");
                     Log.i("vosk", "Model unpacked successfully");
+                    this.tModel = model;
                     initRecognizer();
-                },
-                (exception) -> {
+                }, (exception) -> {
                     Log.e("vp", "Failed to unpack the rec model" + exception.getMessage());
                     Log.e("vosk", "Failed to unpack the rec model" + exception.getMessage());
                 });
@@ -94,7 +98,7 @@ public class VoskProvider {
 
     private void initRecognizer(){
         try {
-            recognizer = new Recognizer(this.vpModel, utils.getSAMPLE_RATE(), this.idModel);
+            recognizer = new Recognizer(this.tModel, utils.getSAMPLE_RATE(), this.idModel);
             Log.i("vp", "Recognizer initialized successfully");
             Log.i("vosk", "Recognizer initialized successfully");
             isCogInit = true;
@@ -108,7 +112,7 @@ public class VoskProvider {
     public AudioRecord getRecorder(){
         return recorder;
     }
-    public Boolean isCogInit(){
+    public boolean isCogInit(){
         return isCogInit;
     }
 
@@ -122,8 +126,8 @@ public class VoskProvider {
         if (recognizer != null) {
         recognizer.close();
         }
-        if (vpModel != null) {
-            vpModel.close();
+        if (tModel != null) {
+            tModel.close();
         }
         } catch (Exception e) {
             Log.e("vp", "Failed to release resources" + e.getMessage());

@@ -3,6 +3,7 @@ package com.example.convo_monitor;
 import android.app.Activity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
@@ -10,72 +11,69 @@ import android.widget.TextView;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.text.InputFilter;
-import android.text.Spanned;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 
 public class UiController {
     private ParticipantManager pm;
-    private VoskProvider vosk;
-    private AppUtils utils;
-
-
-    private final Spinner userDD;
+    private final VoskProvider vosk;
+    private final AppUtils utils;
+    private final VoskTranscriber vt;
+    private Spinner userDD;
     private final Button recordButton;
     private final Button nConvoButton;
     private final Button resetConvoButton;
     private final Button addButton;
     private final Button saveButton;
     private final Button recordIdButton;
-
     private final TextView transTextView;
-    private final TextView UserTextView;
+    private final TextView userTextView;
     private final TextInputEditText tagInputView;
-    private ConstraintLayout topLayout;
-    private FrameLayout midLayout;
-    private ConstraintLayout bottomLayout;
-    private TextInputLayout tagLayout;
-    private int participantCount;
-    
+    private final ConstraintLayout topLayout;
+    private final FrameLayout midLayout;
+    private final ConstraintLayout bottomLayout;
+    private final TextInputLayout tagLayout;
     private final Activity act;
-    
+    private List<Integer> spinnerItems;
+    private ArrayAdapter<Integer> adapter;
+    private int pressed;
 
-    public UiController(Activity a, VoskProvider vosk, AppUtils utils) {
+
+
+    public UiController(Activity a, VoskProvider vosk, AppUtils utils, VoskTranscriber vt) {
         this.act = a;
         this.vosk = vosk;
         this.utils = utils;
+        this.vt = vt;
+        AppUtils.isFirstTime = true;
 
+        setupSpinner();
 
-        // array for user count spinner
-        ArrayAdapter<Integer> adapter = new ArrayAdapter<>(this.act, android.R.layout.simple_spinner_item, new Integer[]{1, 2, 3, 4});
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        userDD = this.act.findViewById(R.id.usersDD);
-        userDD.setAdapter(adapter);
+        this.recordButton = this.act.findViewById(R.id.recBtn);
+        this.nConvoButton = this.act.findViewById(R.id.newConvoBtn);
+        this.resetConvoButton = this.act.findViewById(R.id.resetConvoBtn);
+        this.addButton = this.act.findViewById(R.id.addBtn);
+        this.saveButton = this.act.findViewById(R.id.saveBtn);
+        this.recordIdButton = this.act.findViewById(R.id.recIdBtn);
 
-        recordButton = this.act.findViewById(R.id.recBtn);
-        nConvoButton = this.act.findViewById(R.id.newConvoBtn);
-        resetConvoButton = this.act.findViewById(R.id.resetConvoBtn);
-        addButton = this.act.findViewById(R.id.addBtn);
-        saveButton = this.act.findViewById(R.id.saveBtn);
-        recordIdButton = this.act.findViewById(R.id.recIdBtn);
+        this.transTextView = this.act.findViewById(R.id.TranscribeView);
+        this.userTextView = this.act.findViewById(R.id.UserText);
+        this.tagInputView = this.act.findViewById(R.id.tagInput);
 
-        transTextView = this.act.findViewById(R.id.TranscribeView);
-        UserTextView = this.act.findViewById(R.id.UserText);
-        tagInputView = this.act.findViewById(R.id.tagInput);
+        this.topLayout = this.act.findViewById(R.id.topLayout);
+        this.midLayout = this.act.findViewById(R.id.midLayout);
+        this.bottomLayout = this.act.findViewById(R.id.botLayout);
+        this.tagLayout = this.act.findViewById(R.id.tagLayout);
 
-        topLayout = this.act.findViewById(R.id.topLayout);
-        midLayout = this.act.findViewById(R.id.midLayout);
-        bottomLayout = this.act.findViewById(R.id.botLayout);
-        tagLayout = this.act.findViewById(R.id.tagLayout);
-
-        //apply alphanumeric filter to tagInputView
-        applyAlphanumericFilter(tagInputView);
-
-        // Set Listener
-        setListeners();
+        //apply alphanumeric filter to this.tagInputView
+        applyAlphanumericFilter(this.tagInputView);
 
         // Hide all views
         hideAllViews();
@@ -85,49 +83,42 @@ public class UiController {
      */
     public void createUI() {
         // show bottom layout
-        bottomLayout.setVisibility(View.VISIBLE);
-        //show and enable the nConvoButton
-        nConvoButton.setVisibility(View.VISIBLE);
-        nConvoButton.setEnabled(true);
+        this.bottomLayout.setVisibility(View.VISIBLE);
+        //show and enable the this.nConvoButton
+        this.nConvoButton.setVisibility(View.VISIBLE);
+        this.nConvoButton.setEnabled(true);
     }
 
-    public void setNConvoListener() {
-        // Set up nConvoButton listener
-        nConvoButton.setOnClickListener(v -> {
-            //disable nConvoButton
-            nConvoButton.setEnabled(false);
+    private void setNConvoListener() {
+        // Set up this.nConvoButton listener
+        this.nConvoButton.setOnClickListener(v -> {
+            //disable this.nConvoButton
+            this.nConvoButton.setEnabled(false);
 
             // when button clicked, show and enable: top layout, spinner, save button, and  UserText
-            topLayout.setVisibility(View.VISIBLE);
-            userDD.setVisibility(View.VISIBLE);
-            saveButton.setVisibility(View.VISIBLE);
-            UserTextView.setVisibility(View.VISIBLE);
-            saveButton.setEnabled(true);
+            this.topLayout.setVisibility(View.VISIBLE);
+            this.userDD.setVisibility(View.VISIBLE);
+            this.userDD.setEnabled(true);
+            this.saveButton.setVisibility(View.VISIBLE);
+            this.saveButton.setEnabled(true);
+            this.userTextView.setVisibility(View.VISIBLE);
+            this.userTextView.setEnabled(true);
         });
     }
 
-    public void setSaveListener() {
-        // Set up saveButton listener
-        saveButton.setOnClickListener(v -> {
-            //hide and disable saveButton, spinner, and set userText
-            userDD.setVisibility(View.INVISIBLE);
-            saveButton.setVisibility(View.INVISIBLE);
-            saveButton.setEnabled(false);
-
-            // init participantManager
-            pm = new ParticipantManager((Integer)userDD.getSelectedItem(), vosk, this);
-
-            UserTextView.setText("Participant:" + userDD.getSelectedItem().toString()); // add participant logic later
-
-            // show and enable tagLayout, tagInput and RecordIdButton
-            tagLayout.setVisibility(View.VISIBLE);
-            tagInputView.setVisibility(View.VISIBLE);
-            recordIdButton.setVisibility(View.VISIBLE);
+    private void setRecordIdButtonListener() {
+        this.recordIdButton.setOnClickListener(v -> {
+            //hide and disable tagLayout, tagInput, only disable this.recordIdButton
+            this.tagInputView.setEnabled(false);
+            this.recordIdButton.setEnabled(false);
+            this.pm.recordParticipantId();
         });
     }
 
-    public void setTagInputViewListener() {
-        tagInputView.addTextChangedListener(new TextWatcher() {
+    private void setTagInputViewListener() {
+        Button recIdBtn = this.recordIdButton;
+        this.tagInputView.addTextChangedListener(new TextWatcher() {
+            
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 // Not used here
@@ -140,138 +131,254 @@ public class UiController {
 
             @Override
             public void afterTextChanged(Editable s) {
-                // Enable button only if the text length is exactly 3 characters
-                recordIdButton.setEnabled(s.length() == 3);
+                // Enable button only if the text length is exactly 3 characters and the tag is not the same as any of the participants
+                if (pm != null) {
+                    
+                    boolean uniqueTag = true;
+                    for (ParticipantManager.Participant participant : pm.participants) {
+                        if (participant != null && participant.tagText().equals(s.toString())) {
+                            uniqueTag = false;
+                            break;
+                        }
+                    }
+                    if (!uniqueTag) {
+                        recIdBtn.setText("tag already used");
+                    }
+                    else {
+                        recIdBtn.setText("Record ref audio(5secs)");
+                    }
+                    recIdBtn.setEnabled(uniqueTag && s.length() == 3);
+                }
             }
         });
     }
 
-    public void setRecordIdButtonListener() {
-        recordIdButton.setOnClickListener(v -> {
-            //hide and disable tagLayout, tagInput, only disable recordIdButton
-            tagInputView.setEnabled(false);
-            recordIdButton.setEnabled(false);
-            pm.recordParticipantID();
+    public void mainConvoUi(){
+        // reset recognizer
+        this.vosk.getRecognizer().reset();
 
+        // hide and disable top layout and it's children
+        this.topLayout.setVisibility(View.INVISIBLE);
+        this.saveButton.setEnabled(false);
+        this.saveButton.setVisibility(View.INVISIBLE);
+        this.userDD.setVisibility(View.INVISIBLE);
+        this.userDD.setEnabled(false);
+        this.userTextView.setVisibility(View.INVISIBLE);
+        this.userTextView.setEnabled(false);
+        this.tagLayout.setVisibility(View.INVISIBLE);
+        this.tagLayout.setEnabled(false);
+        this.tagInputView.setVisibility(View.INVISIBLE);
+        this.tagInputView.setEnabled(false);
 
+        // show and enable bottom and mid layout and their children
+        //Bottom layout
+        this.bottomLayout.setVisibility(View.VISIBLE);
+        this.nConvoButton.setVisibility(View.VISIBLE);
+        this.nConvoButton.setEnabled(false);
+        this.resetConvoButton.setVisibility(View.VISIBLE);
+        this.resetConvoButton.setEnabled(true);
+        this.addButton.setVisibility(View.VISIBLE);
 
+        this.addButton.setEnabled(this.pm.pCount < 4);
+
+        this.recordButton.setVisibility(View.VISIBLE);
+        this.recordButton.setEnabled(true);
+
+        this.recordIdButton.setVisibility(View.INVISIBLE);
+        this.recordIdButton.setEnabled(false);
+        this.transTextView.setVisibility(View.VISIBLE);
+
+        //Mid layout
+        this.midLayout.setVisibility(View.VISIBLE);
+        this.midLayout.setEnabled(true);
+        this.transTextView.setVisibility(View.VISIBLE);
+        this.transTextView.setEnabled(true);
+        this.transTextView.setText("Transcription will appear here");
+    }
+
+    private void setRecordButtonListener() {
+        this.recordButton.setOnClickListener(v -> {
+            if (AppUtils.isRecording) {
+                this.recordButton.setText(R.string.startRecording);
+                this.vt.stopRecording();
+            } else {
+                this.utils.setPM(this.pm);
+                this.recordButton.setText(R.string.stopRecording);
+                this.vt.startRecording(this.transTextView);
+            }
         });
     }
 
+    private void setAddButtonListener() {
+        this.addButton.setOnClickListener(v -> {
+            if (this.pm != null) {
+                if (this.pm.pCount < 4) {
+                    addParticipant();
+                }
+            }
+        });
+    }
+
+    private void setSaveListener() {
+        AppUtils.newPCount = 0;
+        // Set up this.saveButton listener
+        this.saveButton.setOnClickListener(v -> {
+            if (AppUtils.isFirstTime) { // if first time, init participantManager
+                //hide and disable this.saveButton, spinner, and set userText
+                this.userDD.setVisibility(View.INVISIBLE);
+                this.saveButton.setVisibility(View.INVISIBLE);
+                this.saveButton.setEnabled(false);
+                // init participantManager
+                this.pm = new ParticipantManager((Integer) this.userDD.getSelectedItem(), vosk, this, utils);
+                addNextParticipant();
+            } else { // if not first time, add new participant
+                this.saveButton.setVisibility(View.INVISIBLE);
+                this.saveButton.setEnabled(false);
+                this.userDD.setVisibility(View.INVISIBLE);
+                AppUtils.newPCount = (Integer) this.userDD.getSelectedItem();
+                addNextParticipant();
+            }
+        });
+    }
+
+    private void addParticipant() {
+        // when button clicked, show and enable: top layout, spinner, save button, and  UserText
+        this.topLayout.setVisibility(View.VISIBLE);
+        try {
+            updateSpinnerBasedOnCurrentUsers();// remove items back of spinner based off of pCount
+        }catch (Exception e) {
+            Log.e("ui", "Error: " + e.getMessage(), e);
+        }
+        this.userDD.setVisibility(View.VISIBLE);
+        this.userDD.setEnabled(true);
+        this.saveButton.setVisibility(View.VISIBLE);
+        this.userTextView.setText("how many participants do you want to add?");
+        this.userTextView.setVisibility(View.VISIBLE);
+        this.userTextView.setEnabled(true);
+        this.saveButton.setEnabled(true);
+    }
+    public void addNextParticipant(){
+        if (pm.pCount == 4) {
+            this.addButton.setEnabled(false); // disable add button if pCount is 4
+            this.addButton.setText("Max participants");
+        }
+        this.userTextView.setText("Participant: "+ (this.pm.pCount+1));
+
+        // show and enable tagLayout, tagInput and RecordIdButton
+        this.tagLayout.setVisibility(View.VISIBLE);
+        // Clear the this.tagInputView
+        this.tagInputView.setText("");
+        this.tagInputView.setEnabled(true);
+        this.tagInputView.setVisibility(View.VISIBLE);
+        this.recordIdButton.setVisibility(View.VISIBLE);
+        this.recordIdButton.setText("Record ref audio(5secs)");
+    }
+
+    public void setResetConvoListener() {
+        this.pressed = 0;
+        // Set up this.resetConvoButton listener
+        this.resetConvoButton.setOnClickListener(v -> {
+            if(this.pressed == 0) {
+                this.resetConvoButton.setText("Press again to confirm");
+                pressed++;
+            }
+            else if (this.pressed == 1) {
+                //reset the participant manager
+                this.pm = null;
+
+                //reset Recognizer
+                this.vosk.getRecognizer().reset();
+
+                // reset first time
+                AppUtils.isFirstTime = true;
+
+                //reset spinner
+                setupSpinner();
+
+                //reset Ui
+                hideAllViews();
+                createUI();
+                this.pressed = 0;
+                this.resetConvoButton.setText("Reset Conversation");
+            }
+        });
+    }
 
     public void setListeners() {
         setNConvoListener();
         setSaveListener();
         setTagInputViewListener();
         setRecordIdButtonListener();
-
+        setRecordButtonListener();
+        setAddButtonListener();
+        setResetConvoListener();
     }
-
     public void hideAllViews() {
-        userDD.setVisibility(View.INVISIBLE);
-        recordButton.setVisibility(View.INVISIBLE);
-        nConvoButton.setVisibility(View.INVISIBLE);
-        resetConvoButton.setVisibility(View.INVISIBLE);
-        addButton.setVisibility(View.INVISIBLE);
-        saveButton.setVisibility(View.INVISIBLE);
-        recordIdButton.setVisibility(View.INVISIBLE);
-        transTextView.setVisibility(View.INVISIBLE);
-        tagInputView.setVisibility(View.INVISIBLE);
-        UserTextView.setVisibility(View.INVISIBLE);
+        this.userDD.setVisibility(View.INVISIBLE);
+        this.recordButton.setVisibility(View.INVISIBLE);
+        this.nConvoButton.setVisibility(View.INVISIBLE);
+        this.resetConvoButton.setVisibility(View.INVISIBLE);
+        this.addButton.setVisibility(View.INVISIBLE);
+        this.saveButton.setVisibility(View.INVISIBLE);
+        this.recordIdButton.setVisibility(View.INVISIBLE);
+        this.transTextView.setVisibility(View.INVISIBLE);
+        this.tagInputView.setVisibility(View.INVISIBLE);
+        this.userTextView.setVisibility(View.INVISIBLE);
 
         // If you want to disable buttons:
-        recordButton.setEnabled(false);
-        nConvoButton.setEnabled(false);
-        resetConvoButton.setEnabled(false);
-        addButton.setEnabled(false);
-        saveButton.setEnabled(false);
-        recordIdButton.setEnabled(false);
+        this.recordButton.setEnabled(false);
+        this.nConvoButton.setEnabled(false);
+        this.resetConvoButton.setEnabled(false);
+        this.addButton.setEnabled(false);
+        this.saveButton.setEnabled(false);
+        this.recordIdButton.setEnabled(false);
 
         //hide layouts
-        topLayout.setVisibility(View.INVISIBLE);
-        midLayout.setVisibility(View.INVISIBLE);
-        bottomLayout.setVisibility(View.INVISIBLE);
-        tagLayout.setVisibility(View.INVISIBLE);
+        this.topLayout.setVisibility(View.INVISIBLE);
+        this.midLayout.setVisibility(View.INVISIBLE);
+        this.bottomLayout.setVisibility(View.INVISIBLE);
+        this.tagLayout.setVisibility(View.INVISIBLE);
     }
 
-
-    // Getter methods
-    public Spinner getUserDD() {
-        return userDD;
-    }
-
-    public Button getRecButton() {
-        return recordButton;
-    }
-
-    public Button getNConvoButton() {
-        return nConvoButton;
-    }
-
-    public Button getResetConvoButton() {
-        return resetConvoButton;
-    }
-
-    public Button getAddButton() {
-        return addButton;
-    }
-
-    public Button getSaveButton() {
-        return saveButton;
-    }
-
+    // Getters
     public Button getRecordIdButton() {
-        return recordIdButton;
+        return this.recordIdButton;
     }
-
-    public TextView getTransTextView() {
-        return transTextView;
-    }
-
     public TextView getTagInputView() {
-        return tagInputView;
+        return this.tagInputView;
     }
+    private void setupSpinner() {
+        this.spinnerItems = new ArrayList<>(Arrays.asList(1, 2, 3, 4));
 
-    public TextView getUserTextView() {
-        return UserTextView;
+        // array for user count spinner
+        this.adapter = new ArrayAdapter<>(this.act, android.R.layout.simple_spinner_item, spinnerItems);
+        this.adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        this.userDD = this.act.findViewById(R.id.usersDD);
+        this.userDD.setAdapter(adapter);
     }
+    private void updateSpinnerBasedOnCurrentUsers() {
+        int currentSize = this.spinnerItems.size(); // Get current number of items
+        Log.i("ui", "currentSize: " + currentSize);
+        int itemsToRemove = this.pm.pCount; // Number of items to remove from the end based on pCount
 
-    public ConstraintLayout getTopLayout() {
-        return topLayout;
-    }
-
-    public FrameLayout getMidLayout() {
-        return midLayout;
-    }
-
-    public ConstraintLayout getBottomLayout() {
-        return bottomLayout;
-    }
-
-    public int getParticipantCount() {
-        return participantCount;
-    }
-
-    // Update text methods
-    public void updateTransTextView(String text) {
-        transTextView.setText(text);
-    }
-
-    public void updateUserTextView(String text) {
-        UserTextView.setText(text);
-    }
-
-    public void applyAlphanumericFilter(TextInputEditText editText) {
-        InputFilter alphanumericFilter = new InputFilter() {
-            @Override
-            public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-                for (int i = start; i < end; i++) {
-                    if (!Character.isLetterOrDigit(source.charAt(i))) {
-                        return "";  // Block non-alphanumeric characters
-                    }
-                }
-                return null;  // Accept the original input
+        if (itemsToRemove > 0 && itemsToRemove < currentSize) {
+            // Remove the specified number of items from the end of the list
+            for (int i = 0; i < itemsToRemove; i++) {
+                this.spinnerItems.remove(currentSize - 1); // Remove last item each iteration
             }
+            this.adapter.notifyDataSetChanged(); // Notify the adapter to update the view
+            this.userDD.setSelection(Math.max(0, spinnerItems.size() - 1)); // Adjust selection to last item
+            Log.i("ui", "spinnerItems: " + spinnerItems);
+        }
+    }
+    private void applyAlphanumericFilter(TextInputEditText editText) {
+        InputFilter alphanumericFilter = (source, start, end, dest, dstart, dend) -> {
+            for (int i = start; i < end; i++) {
+                if (!Character.isLetterOrDigit(source.charAt(i))) {
+                    return "";  // Block non-alphanumeric characters
+                }
+            }
+            return null;  // Accept the original input
         };
 
         // Retrieve the current set of filters

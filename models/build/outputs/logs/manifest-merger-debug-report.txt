@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml:2:13-83
-INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml:2:13-83
+ADDED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml:2:13-83
+INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml:2:13-83
 	package
-		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml
+		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml
 	xmlns:android
-		ADDED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml:2:23-81
+		ADDED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml:2:23-81
 uses-sdk
-INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml reason: use-sdk injection requested
-INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml
-INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml
+INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml reason: use-sdk injection requested
+INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml
+INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml
 	android:targetSdkVersion
-		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml
+		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml
 	android:minSdkVersion
-		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest16160149488755357826.xml
+		INJECTED from T:\Uni\IP\Convo-Monitor\models\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest1957779883088707403.xml

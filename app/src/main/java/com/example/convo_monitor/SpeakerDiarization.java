@@ -1,38 +1,35 @@
 package com.example.convo_monitor;
 
 
+import java.util.Objects;
 
-import static android.content.ContentValues.TAG;
-
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
-import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import org.vosk.Model;
-import org.vosk.Recognizer;
-import org.vosk.android.StorageService;
-
-import static com.example.convo_monitor.MainActivity.CHANNEL;
-import static com.example.convo_monitor.MainActivity.FORMAT;
-import static com.example.convo_monitor.MainActivity.PERMISSIONS_REQUEST_RECORD_AUDIO;
-import static com.example.convo_monitor.MainActivity.SAMPLE_RATE;
-import static com.example.convo_monitor.MainActivity.audioBuffer;
-
-
-import java.io.IOException;
-
-// TODO: Implement real-time diarization using TarsosDSP
 public class SpeakerDiarization{
-    @SuppressLint("MissingPermission")
-    public SpeakerDiarization(Context context, Activity activity, VoskProvider vosk){
+    private ParticipantManager pm;
+
+
+    public String compareSpeaker(double[] incomingVector) {
+        double maxSimilarity = -1; // Start with the lowest possible similarity
+        String bestMatchParticipantName = null; // Name of the best matching participant
+
+        for (ParticipantManager.Participant p : this.pm.participants) {
+            double similarity = cosineSimilarity(incomingVector, p.refVector());
+            if (similarity > maxSimilarity) {
+                maxSimilarity = similarity;
+                bestMatchParticipantName = p.tagText(); // Get the tag of most similar participant
+            }
+        }
+        return Objects.requireNonNullElse(bestMatchParticipantName, "No match found");
     }
 
+    public double cosineSimilarity(double[] vectorA, double[] vectorB) {
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        for (int i = 0; i < vectorA.length; i++) {
+            dotProduct += vectorA[i] * vectorB[i];
+            normA += Math.pow(vectorA[i], 2);
+            normB += Math.pow(vectorB[i], 2);
+        }
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
 }

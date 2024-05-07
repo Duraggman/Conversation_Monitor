@@ -47,7 +47,7 @@
             android:id="@+id/UserText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select number of users particpants"
+            android:text="Select number of participants"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.151"
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="66dp"
             android:layout_marginEnd="24dp"
-            android:text="Record ref audio(20secs)"
+            android:text="Record ref audio(5secs)"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.789"
@@ -115,7 +115,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text=""
+            android:text="Transcription will appear here"
             android:textSize="18sp" />
 
 
