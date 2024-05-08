@@ -1,5 +1,6 @@
 package com.example.convo_monitor;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,10 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 
 
+@SuppressLint("SetTextI18n")
 public class UiController {
     private ParticipantManager pm;
     private final VoskProvider vosk;
-    private final AppUtils utils;
     private final VoskTranscriber vt;
     private Spinner userDD;
     private final Button recordButton;
@@ -45,12 +46,9 @@ public class UiController {
     private ArrayAdapter<Integer> adapter;
     private int pressed;
 
-
-
-    public UiController(Activity a, VoskProvider vosk, AppUtils utils, VoskTranscriber vt) {
+    public UiController(Activity a, VoskProvider vosk, VoskTranscriber vt) {
         this.act = a;
         this.vosk = vosk;
-        this.utils = utils;
         this.vt = vt;
         AppUtils.isFirstTime = true;
 
@@ -129,6 +127,7 @@ public class UiController {
                 // Not used here
             }
 
+
             @Override
             public void afterTextChanged(Editable s) {
                 // Enable button only if the text length is exactly 3 characters and the tag is not the same as any of the participants
@@ -199,10 +198,22 @@ public class UiController {
     private void setRecordButtonListener() {
         this.recordButton.setOnClickListener(v -> {
             if (AppUtils.isRecording) {
+                // when recording other function buttons are disabled
+                if (this.pm.pCount < 4){
+                    this.addButton.setEnabled(true);
+                }
+
+                this.nConvoButton.setEnabled(true);
+                this.resetConvoButton.setEnabled(true);
+
                 this.recordButton.setText(R.string.startRecording);
                 this.vt.stopRecording();
             } else {
-                this.utils.setPM(this.pm);
+                // when recording other function buttons are disabled
+                this.addButton.setEnabled(false);
+                this.nConvoButton.setEnabled(false);
+                this.resetConvoButton.setEnabled(false);
+
                 this.recordButton.setText(R.string.stopRecording);
                 this.vt.startRecording(this.transTextView);
             }
@@ -211,43 +222,27 @@ public class UiController {
 
     private void setAddButtonListener() {
         this.addButton.setOnClickListener(v -> {
+            // disable add button record button and reset button
             if (this.pm != null) {
                 if (this.pm.pCount < 4) {
+                    this.addButton.setEnabled(false);
+                    this.recordButton.setEnabled(false);
+                    this.resetConvoButton.setEnabled(false);
+                    this.nConvoButton.setEnabled(false);
                     addParticipant();
                 }
             }
         });
     }
-
-    private void setSaveListener() {
-        AppUtils.newPCount = 0;
-        // Set up this.saveButton listener
-        this.saveButton.setOnClickListener(v -> {
-            if (AppUtils.isFirstTime) { // if first time, init participantManager
-                //hide and disable this.saveButton, spinner, and set userText
-                this.userDD.setVisibility(View.INVISIBLE);
-                this.saveButton.setVisibility(View.INVISIBLE);
-                this.saveButton.setEnabled(false);
-                // init participantManager
-                this.pm = new ParticipantManager((Integer) this.userDD.getSelectedItem(), vosk, this, utils);
-                addNextParticipant();
-            } else { // if not first time, add new participant
-                this.saveButton.setVisibility(View.INVISIBLE);
-                this.saveButton.setEnabled(false);
-                this.userDD.setVisibility(View.INVISIBLE);
-                AppUtils.newPCount = (Integer) this.userDD.getSelectedItem();
-                addNextParticipant();
-            }
-        });
-    }
-
-    private void addParticipant() {
+    public void addParticipant() {
         // when button clicked, show and enable: top layout, spinner, save button, and  UserText
-        this.topLayout.setVisibility(View.VISIBLE);
-        try {
-            updateSpinnerBasedOnCurrentUsers();// remove items back of spinner based off of pCount
-        }catch (Exception e) {
-            Log.e("ui", "Error: " + e.getMessage(), e);
+        if (this.pm.pCount > 0) {
+            this.topLayout.setVisibility(View.VISIBLE);
+            try {
+                updateSpinnerBasedOnCurrentUsers();// remove items back of spinner based off of pCount
+            } catch (Exception e) {
+                Log.e("ui", "Error: " + e.getMessage(), e);
+            }
         }
         this.userDD.setVisibility(View.VISIBLE);
         this.userDD.setEnabled(true);
@@ -256,6 +251,10 @@ public class UiController {
         this.userTextView.setVisibility(View.VISIBLE);
         this.userTextView.setEnabled(true);
         this.saveButton.setEnabled(true);
+        this.tagLayout.setVisibility(View.INVISIBLE);
+        this.tagLayout.setEnabled(false);
+        this.recordIdButton.setVisibility(View.INVISIBLE);
+        this.recordIdButton.setEnabled(false);
     }
     public void addNextParticipant(){
         if (pm.pCount == 4) {
@@ -300,6 +299,27 @@ public class UiController {
                 createUI();
                 this.pressed = 0;
                 this.resetConvoButton.setText("Reset Conversation");
+            }
+        });
+    }
+
+    private void setSaveListener() {
+        // Set up this.saveButton listener
+        this.saveButton.setOnClickListener(v -> {
+            if (AppUtils.isFirstTime) { // if first time, init participantManager
+                //hide and disable this.saveButton, spinner, and set userText
+                this.userDD.setVisibility(View.INVISIBLE);
+                this.saveButton.setVisibility(View.INVISIBLE);
+                this.saveButton.setEnabled(false);
+                // init participantManager
+                this.pm = new ParticipantManager((Integer) this.userDD.getSelectedItem(), vosk, this);
+                addNextParticipant();
+            } else { // if not first time, add new participant
+                this.saveButton.setVisibility(View.INVISIBLE);
+                this.saveButton.setEnabled(false);
+                this.userDD.setVisibility(View.INVISIBLE);
+                this.pm.newPCount = (Integer) this.userDD.getSelectedItem();
+                addNextParticipant();
             }
         });
     }
@@ -359,15 +379,21 @@ public class UiController {
     private void updateSpinnerBasedOnCurrentUsers() {
         int currentSize = this.spinnerItems.size(); // Get current number of items
         Log.i("ui", "currentSize: " + currentSize);
-        int itemsToRemove = this.pm.pCount; // Number of items to remove from the end based on pCount
+        int itemsToRemove =  currentSize - this.pm.pCount;// Number of items to remove from the end based on pCount
+        Log.i("ui", "itemsToRemove: " + itemsToRemove);
 
         if (itemsToRemove > 0 && itemsToRemove < currentSize) {
+            int cSize = currentSize -1;
+            Log.i("ui", "cSize: " + cSize);
             // Remove the specified number of items from the end of the list
-            for (int i = 0; i < itemsToRemove; i++) {
-                this.spinnerItems.remove(currentSize - 1); // Remove last item each iteration
+
+            for (int r = 0; r < itemsToRemove; r++) {
+                this.spinnerItems.remove(cSize);// Remove last item each iteration
+                cSize--;
+                Log.i("ui", String.format("Removing Item at index: %d", cSize));
             }
             this.adapter.notifyDataSetChanged(); // Notify the adapter to update the view
-            this.userDD.setSelection(Math.max(0, spinnerItems.size() - 1)); // Adjust selection to last item
+            this.userDD.setSelection(0); // Adjust selection to last item
             Log.i("ui", "spinnerItems: " + spinnerItems);
         }
     }
