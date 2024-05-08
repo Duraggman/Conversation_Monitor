@@ -1,5 +1,9 @@
 package com.example.convo_monitor;
 
+import static com.example.convo_monitor.AppUtils.BUFFER_SIZE;
+import static com.example.convo_monitor.AppUtils.CHANNEL;
+import static com.example.convo_monitor.AppUtils.FORMAT;
+import static com.example.convo_monitor.AppUtils.SAMPLE_RATE;
 import static com.example.convo_monitor.AppUtils.checkAndRequestAudioPermissions;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -20,27 +24,24 @@ public class VoskProvider {
     private AudioRecord recorder;
     private Model tModel;
     private SpeakerModel idModel;
+    public final Context context;
     private final AppUtils utils;
-
-    private final Context context;
     private boolean isCogInit = false;
 
-    public VoskProvider(Context context, Activity activity, AppUtils utils ) {
-        this.utils = utils;
+    public VoskProvider(Context context, Activity activity, AppUtils utils) {
         this.context = context;
+        this.utils = utils;
         try {
             if (checkAndRequestAudioPermissions(activity, context)) {
                 initRecorder();
+                initTModel();
+                initIDModel();
+            } else {
+                Toast.makeText(context, "Audio permissions are required for recording", Toast.LENGTH_SHORT).show();
             }
-            else {
-                initRecorder();
-            }
-            initTModel();
-            initIDModel();
         } catch (Exception e) {
-            Log.e("vp", "Failed to initialize the VoskProvider" + e.getMessage());
-            Log.e("vosk", "Failed to initialize the VoskProvider" + e.getMessage());
-            Toast.makeText(this.context, "Permissions not granted.", Toast.LENGTH_SHORT).show();
+            Log.e("VoskProvider", "Failed to initialize the VoskProvider: " + e.getMessage());
+            Toast.makeText(context, "Permissions not granted.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -49,7 +50,7 @@ public class VoskProvider {
         // Initialize the AudioRecord object
         try {
             // using a local recorder object
-            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, utils.getSAMPLE_RATE(), utils.getCHANNEL(), utils.getFORMAT(), utils.getBufferSize());
+            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL, FORMAT, BUFFER_SIZE);
             if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
                 Log.e("vp", "Audio Record can't initialize!");
                 Log.e("vosk", "Audio Record can't initialize!");
@@ -64,6 +65,9 @@ public class VoskProvider {
         }
     }
 
+    public AppUtils getUtils() {
+        return this.utils;
+    }
 
     private void initTModel(){
         // Load the Vosk model from the assets folder using the StorageService class from Vosk
@@ -80,7 +84,7 @@ public class VoskProvider {
     }
     private void initIDModel() {
         try {
-            String modelPath = this.utils.copyAssetsToLocalStorage(this.context, "model-spk");
+            String modelPath = AppUtils.copyAssetsToLocalStorage(this.context, "model-spk");
             try {
                 this.idModel = new SpeakerModel(modelPath);
                 Log.i("vp", "ID Model initialized successfully");
@@ -98,7 +102,7 @@ public class VoskProvider {
 
     private void initRecognizer(){
         try {
-            recognizer = new Recognizer(this.tModel, utils.getSAMPLE_RATE(), this.idModel);
+            recognizer = new Recognizer(this.tModel, SAMPLE_RATE, this.idModel);
             Log.i("vp", "Recognizer initialized successfully");
             Log.i("vosk", "Recognizer initialized successfully");
             isCogInit = true;
@@ -117,22 +121,4 @@ public class VoskProvider {
     }
 
     //release all resources
-    public void close() {
-        try{
-        if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-            recorder.stop();
-            recorder.release();
-        }
-        if (recognizer != null) {
-        recognizer.close();
-        }
-        if (tModel != null) {
-            tModel.close();
-        }
-        } catch (Exception e) {
-            Log.e("vp", "Failed to release resources" + e.getMessage());
-            Log.e("vosk", "Failed to release resources" + e.getMessage());
-        }
-    }
-    // Release the resources used by the AudioRecorder
 }
