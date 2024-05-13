@@ -19,6 +19,7 @@ public class VoiceActivityDetector {
                 .setSampleRate(SampleRate.SAMPLE_RATE_16K)
                 .setFrameSize(FrameSize.FRAME_SIZE_512)
                 .setMode(Mode.NORMAL)
+                 // Test different values
                 .setSilenceDurationMs(300)
                 .setSpeechDurationMs(50)
                 .build();

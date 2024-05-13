@@ -110,18 +110,23 @@
         app:layout_constraintTop_toBottomOf="@id/topLayout"
         app:layout_constraintVertical_weight="4">
 
-        <TextView
-            android:id="@+id/TranscribeView"
+        <ScrollView
+            android:id="@+id/transScroller"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Transcription will appear here"
-            android:textSize="18sp" />
+            android:padding="16dp">
 
-
-
-
+            <TextView
+                android:id="@+id/TranscribeView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Transcription will appear here"
+                android:textSize="18sp"
+                android:padding="5dp"/>
+        </ScrollView>
     </FrameLayout>
+
 
     <!-- Bottom container for buttons (3/10 of screen) -->
     <androidx.constraintlayout.widget.ConstraintLayout

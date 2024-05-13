@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Button;
 import android.widget.Spinner;
@@ -41,10 +42,11 @@ public class UiController {
     private final FrameLayout midLayout;
     private final ConstraintLayout bottomLayout;
     private final TextInputLayout tagLayout;
+    private final ScrollView transScroller;
     private final Activity act;
     private List<Integer> spinnerItems;
     private ArrayAdapter<Integer> adapter;
-    private int pressed;
+    private boolean resetPressedLast;
 
     public UiController(Activity a, VoskProvider vosk, VoskTranscriber vt) {
         this.act = a;
@@ -69,6 +71,7 @@ public class UiController {
         this.midLayout = this.act.findViewById(R.id.midLayout);
         this.bottomLayout = this.act.findViewById(R.id.botLayout);
         this.tagLayout = this.act.findViewById(R.id.tagLayout);
+        this.transScroller = this.act.findViewById(R.id.transScroller);
 
         //apply alphanumeric filter to this.tagInputView
         applyAlphanumericFilter(this.tagInputView);
@@ -86,10 +89,11 @@ public class UiController {
         this.nConvoButton.setVisibility(View.VISIBLE);
         this.nConvoButton.setEnabled(true);
     }
-
     private void setNConvoListener() {
         // Set up this.nConvoButton listener
         this.nConvoButton.setOnClickListener(v -> {
+            this.resetPressedLast = false;
+            this.resetConvoButton.setText("Reset Conversation");
             //disable this.nConvoButton
             this.nConvoButton.setEnabled(false);
 
@@ -103,7 +107,6 @@ public class UiController {
             this.userTextView.setEnabled(true);
         });
     }
-
     private void setRecordIdButtonListener() {
         this.recordIdButton.setOnClickListener(v -> {
             //hide and disable tagLayout, tagInput, only disable this.recordIdButton
@@ -112,7 +115,6 @@ public class UiController {
             this.pm.recordParticipantId();
         });
     }
-
     private void setTagInputViewListener() {
         Button recIdBtn = this.recordIdButton;
         this.tagInputView.addTextChangedListener(new TextWatcher() {
@@ -151,7 +153,6 @@ public class UiController {
             }
         });
     }
-
     public void mainConvoUi(){
         // reset recognizer
         this.vosk.getRecognizer().reset();
@@ -190,20 +191,22 @@ public class UiController {
         //Mid layout
         this.midLayout.setVisibility(View.VISIBLE);
         this.midLayout.setEnabled(true);
+        this.transScroller.setVisibility(View.VISIBLE);
+        this.transScroller.setEnabled(true);
         this.transTextView.setVisibility(View.VISIBLE);
         this.transTextView.setEnabled(true);
         this.transTextView.setText("Transcription will appear here");
     }
-
     private void setRecordButtonListener() {
         this.recordButton.setOnClickListener(v -> {
+            this.resetPressedLast = false;
+            this.resetConvoButton.setText("Reset Conversation");
             if (AppUtils.isRecording) {
                 // when recording other function buttons are disabled
                 if (this.pm.pCount < 4){
                     this.addButton.setEnabled(true);
                 }
 
-                this.nConvoButton.setEnabled(true);
                 this.resetConvoButton.setEnabled(true);
 
                 this.recordButton.setText(R.string.startRecording);
@@ -211,7 +214,6 @@ public class UiController {
             } else {
                 // when recording other function buttons are disabled
                 this.addButton.setEnabled(false);
-                this.nConvoButton.setEnabled(false);
                 this.resetConvoButton.setEnabled(false);
 
                 this.recordButton.setText(R.string.stopRecording);
@@ -219,16 +221,16 @@ public class UiController {
             }
         });
     }
-
     private void setAddButtonListener() {
         this.addButton.setOnClickListener(v -> {
+            this.resetPressedLast = false;
+            this.resetConvoButton.setText("Reset Conversation");
             // disable add button record button and reset button
             if (this.pm != null) {
                 if (this.pm.pCount < 4) {
                     this.addButton.setEnabled(false);
                     this.recordButton.setEnabled(false);
                     this.resetConvoButton.setEnabled(false);
-                    this.nConvoButton.setEnabled(false);
                     addParticipant();
                 }
             }
@@ -272,16 +274,14 @@ public class UiController {
         this.recordIdButton.setVisibility(View.VISIBLE);
         this.recordIdButton.setText("Record ref audio(5secs)");
     }
-
     public void setResetConvoListener() {
-        this.pressed = 0;
-        // Set up this.resetConvoButton listener
+        // Set up resetConvoButton listener
         this.resetConvoButton.setOnClickListener(v -> {
-            if(this.pressed == 0) {
+            if(!this.resetPressedLast) {
                 this.resetConvoButton.setText("Press again to confirm");
-                pressed++;
+                this.resetPressedLast = true;
             }
-            else if (this.pressed == 1) {
+            else {
                 //reset the participant manager
                 this.pm = null;
 
@@ -294,15 +294,17 @@ public class UiController {
                 //reset spinner
                 setupSpinner();
 
+                //reset Conversation log
+                this.vt.conversationLog = new StringBuilder();
+
                 //reset Ui
                 hideAllViews();
                 createUI();
-                this.pressed = 0;
+                this.resetPressedLast = false;
                 this.resetConvoButton.setText("Reset Conversation");
             }
         });
     }
-
     private void setSaveListener() {
         // Set up this.saveButton listener
         this.saveButton.setOnClickListener(v -> {
@@ -323,8 +325,8 @@ public class UiController {
             }
         });
     }
-
     public void setListeners() {
+        this.resetPressedLast = false;
         setNConvoListener();
         setSaveListener();
         setTagInputViewListener();
@@ -358,9 +360,8 @@ public class UiController {
         this.midLayout.setVisibility(View.INVISIBLE);
         this.bottomLayout.setVisibility(View.INVISIBLE);
         this.tagLayout.setVisibility(View.INVISIBLE);
+        this.transScroller.setVisibility(View.INVISIBLE);
     }
-
-    // Getters
     public Button getRecordIdButton() {
         return this.recordIdButton;
     }

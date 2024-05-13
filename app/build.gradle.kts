@@ -48,8 +48,9 @@ dependencies {
     implementation(project(":models"))
     implementation("be.tarsos.dsp:core:2.5")
     implementation("be.tarsos.dsp:jvm:2.5")
+    implementation("com.github.gkonovalov.android-vad:silero:2.0.6")
+
     implementation(libs.json.json)
-    implementation(libs.silero)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

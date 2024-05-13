@@ -12,7 +12,6 @@ public class MainActivity extends AppCompatActivity {
     public UiController ui;
     public VoskProvider vosk;
     public VoskTranscriber vt;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call the parent class constructor
@@ -30,6 +29,5 @@ public class MainActivity extends AppCompatActivity {
         ui = new UiController(this, vosk,vt);
         ui.setListeners(); // Setting the listeners after the transcriber is set
         ui.createUI();
-
     }
 }
